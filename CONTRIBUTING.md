@@ -20,8 +20,8 @@ never filtered by score. Deciding that a sentence in someone's obituary scores
 badly is not a judgement worth making.
 
 `npm run coverage` exits non-zero if recall drops, so CI will catch it. Please
-don't route around that. It is easier to break than it looks — broadening a
-phrase list elsewhere can let a non-rail genre match first.
+don't route around that. It is easier to break than it looks, because
+broadening a phrase list elsewhere can let a non-rail genre match first.
 
 ## Where things live
 
@@ -93,6 +93,6 @@ very welcome, especially ones that currently fail.
 This is a reading tool. It deletes and reorders the author's own words and
 never substitutes them, so a card is always something the author actually
 wrote. Changes that generate text, call a model, or send any part of a feed
-over the network are out of scope — not because they would not work, but
+over the network are out of scope. Not because they would not work, but
 because "runs entirely on your machine and cannot make anything up" is the
 whole design.

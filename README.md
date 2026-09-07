@@ -33,21 +33,21 @@ Follow me for more insights.
 #growth #startups
 ```
 
-There is no genre badge and no line telling you what the author "really wants". Reading "farming reach" beside a post asks you to decode a second layer on top of the first, and the point is that there is nothing left to decode.
+Cards carry no genre badge and no guess at motive. Reading "farming reach" beside a post hands you a second layer to decode, when removing the first one was the whole job.
 
 ## It runs on your machine
 
-There is no model, no API key, no account and no network call. You install it and it works.
+It ships without a model and never touches the network, so there is nothing to sign up for and nothing to pay. You install it and it works.
 
 That is possible because LinkedIn cringe is template-generated. An entire industry publishes the templates as swipe files, hook generators and "5 proven viral formats", and people copy them. A post assembled from a published template is matchable by a published pattern.
 
 So the work is deciding which of the author's own sentences carry information and which are scaffolding: the cliffhanger hook, the one-line suspense beats, the tidy aphorism at the end, the call to action, the hashtag row. A catalog of 79 post types drives that, plus a set of transforms that strip packaging without touching the claim inside it.
 
-Every word on a card comes out of the post. Nothing is paraphrased and nothing is invented, so the extension cannot make anything up. Because it never calls a model it is instant, it stays free, and no part of your feed leaves the browser.
+Every word on a card comes out of the post, so the extension cannot make anything up. It is also instant, and no part of your feed leaves the browser.
 
 ## English and Spanish
 
-Cards render in the language of the post, which the design forces rather than chooses: the text on a card is copied out of the post, so a Spanish post produces a Spanish card with nothing to translate.
+Cards render in the language of the post. Card text is copied out of the post, so a Spanish post produces a Spanish card and there is nothing to translate.
 
 The genre list is shared across languages. `src/catalog/genres.js` holds the ids, families and intents; `src/catalog/genres.es.js` supplies the Spanish phrase banks. Language is detected by counting function words, which needs no model and only has to separate two languages.
 
@@ -75,7 +75,7 @@ After you edit any file, hit the reload arrow on the extension card and refresh 
 
 ## Settings
 
-The extension icon gives you an on/off switch and your session's coverage. **Settings** adds:
+The extension icon gives you an on/off switch and how many posts it rewrote this session. **Settings** adds:
 
 - **Family mutes.** Leave whole categories alone. If you only want the reach-farming posts collapsed, mute the other ten.
 - **Author whitelist.** People whose posts are never touched.
@@ -85,7 +85,7 @@ The extension icon gives you an on/off switch and your session's coverage. **Set
 
 With the cards on, LinkedIn's sidebars are the loudest thing left on the page, so they are hidden by default along with the messaging popup. Media inside posts is never touched, since that is content.
 
-Hiding the rails leaves the feed column stranded at LinkedIn's own ~555px in the middle of a wide screen, which reads as the mobile layout. Widening it is harder than it sounds: `main` is a grid whose track widths come from the panes themselves, and several wrappers between it and the feed are `display: contents`, where width has no effect at all. Two attempts to fix that from a stylesheet collapsed the column instead of widening it.
+Hiding the rails leaves the feed column stranded at LinkedIn's own ~555px in the middle of a wide screen, which reads as the mobile layout. `main` is a grid whose track widths come from the panes themselves, and several wrappers between it and the feed are `display: contents`, where width has no effect at all. Two attempts to fix that from a stylesheet collapsed the column instead of widening it.
 
 So `src/layout.js` measures the page at runtime instead. It walks up from the feed container, skips the `display: contents` wrappers, widens only the ancestors that are actually narrower than the target, and then checks on the next frame whether the feed really got wider. If it did not, every rule is removed and it logs why. A feed that is too narrow is a complaint; a feed collapsed to 300px is unusable, so the failure mode is "nothing changes".
 
@@ -137,9 +137,11 @@ Predicates: `phrase`, `regex`, `capture`, `native`, `flag`, `structure`, `score`
 
 One warning for Spanish patterns. JavaScript's `\b` is ASCII-only, so `/\bcomentá\b/` never matches: "á" is not a word character, and the boundary assertion fails right where the verb ends. Use `(?:^|[^\wÀ-ÿ])` and `(?![\wÀ-ÿ])` instead. That bug silently disabled several Spanish genres before the corpus caught it.
 
-## Coverage
+## Checking output quality
 
-Coverage is the share of real feed posts that match a named genre. Above 80% the feed reads sharp. Below 70% it fills with "no specifics found" and the extension feels dumb.
+`npm run coverage` reports how much of a post survives: what share got rewritten, and how many characters came out against how many went in. On real feed posts it currently rewrites 79% of them and cuts about 39% of the text.
+
+It also reports genre classification, which is a means rather than the output. A genre gates the sensitive rail and the family mutes and contributes no words to a card, so that number moving is not the same as the extension getting better.
 
 ```sh
 npm run coverage
@@ -187,6 +189,16 @@ LinkedIn locale pair. Expect rough edges and please report them.
 LinkedIn's [User Agreement](https://www.linkedin.com/legal/user-agreement) §8.2.2 names browser plugins, and §8.2.15 prohibits "inserting elements into the Services". LinkedLess does that, and so does every ad blocker.
 
 The realistic risk is account-level enforcement rather than legal action, and we are not aware of it being applied to individual users running feed modifiers. You should know it exists before you install. Nothing is scraped and nothing is transmitted. The extension changes your view of your own feed.
+
+## Not affiliated with LinkedIn
+
+LinkedLess is an independent open-source project. It is not affiliated with,
+endorsed by, or connected to LinkedIn Corporation. "LinkedIn" is a trademark of
+LinkedIn Corporation and is used here only to say what the extension works on.
+
+The extension makes no requests to LinkedIn's servers, scrapes nothing, sends
+nothing anywhere, and automates no action on your behalf. It changes how your
+own browser renders a page you are already logged into, and nothing else.
 
 ## Credit
 
