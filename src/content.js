@@ -53,18 +53,6 @@
     }
   }
 
-  /**
-   * Publish the sticky header's height so the overlay can clip itself below
-   * it. Measured rather than hardcoded because LinkedIn changes it, and set on
-   * <html>, which React does not manage.
-   */
-  function measureNav() {
-    var nav = document.querySelector("header");
-    var height = nav ? Math.round(nav.getBoundingClientRect().height) : 0;
-    if (height > 0 && height < 200) {
-      document.documentElement.style.setProperty("--ll-nav-height", height + "px");
-    }
-  }
 
   var scanQueued = false;
   var renderQueued = false;
@@ -186,12 +174,10 @@
 
   function start() {
     applyFocus();
-    measureNav();
 
     // Reposition on scroll. capture:true is mandatory — see note 1 above.
     window.addEventListener("scroll", requestRender, { passive: true, capture: true });
     window.addEventListener("resize", function () {
-      measureNav();
       ns.layout.reset();
       applyFocus();
       requestRender();
@@ -216,15 +202,33 @@
     scan();
     RETRY_SCAN_DELAYS_MS.forEach(function (ms) { setTimeout(scan, ms); });   // note 3
 
-    // SPA navigation swaps the feed without a page load.
+    // SPA navigation swaps the feed without a page load. Polling for it left
+    // cards from the feed floating over Notifications for up to a second,
+    // which users saw as paragraphs frozen on the new page. Hook the history
+    // API so teardown happens on the navigation itself.
     var lastPath = location.pathname;
-    setInterval(function () {
+
+    function onNavigate() {
       if (location.pathname === lastPath) return;
       lastPath = location.pathname;
       ns.scanner.reset();
       ns.renderer.teardown();
       RETRY_SCAN_DELAYS_MS.forEach(function (ms) { setTimeout(scan, ms); });
-    }, 800);
+    }
+
+    ["pushState", "replaceState"].forEach(function (method) {
+      var original = history[method];
+      history[method] = function () {
+        var result = original.apply(this, arguments);
+        onNavigate();
+        return result;
+      };
+    });
+    window.addEventListener("popstate", onNavigate);
+
+    // Belt and braces: the history hook can be lost if LinkedIn reassigns
+    // history.pushState after us, and some navigations do not touch it at all.
+    setInterval(onNavigate, 500);
   }
 
   try {

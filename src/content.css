@@ -4,24 +4,22 @@
    stays interactive everywhere a card is not drawn. */
 
 #linkedless-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9000;
+  /* Inside the scroll container, not fixed to the viewport. The container's
+     own overflow clips cards under LinkedIn's header, so no clip-path is
+     needed for that any more. */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  z-index: 20;
   pointer-events: none;
-  /* Clip the whole overlay below LinkedIn's sticky header. The header has no
-     z-index of its own, so a card scrolling past it would otherwise sit on
-     top of the navigation. Clipping handles the partly-overlapping case that
-     culling by rect cannot. */
-  clip-path: inset(var(--ll-nav-height, 52px) 0 0 0);
 }
 
 #linkedless-overlay .ll-card {
-  position: fixed;
-  /* Positioned with transform, so the anchor stays at the origin. Moving a
-     card on scroll then costs a composite instead of a layout. */
-  left: 0;
-  top: 0;
-  will-change: transform;
+  /* Absolute inside the scroller: the browser moves these while scrolling, so
+     there is no per-frame JavaScript and no lag behind the content. */
+  position: absolute;
   pointer-events: auto;
   box-sizing: border-box;
 
@@ -29,6 +27,9 @@
      a border and a radius of its own read as a box inside a box. It needs an
      opaque background only because the original text is still behind it,
      collapsed rather than removed. */
+  /* background and color are set from the surface the card covers, in
+     renderer.js. A media query reads the OS theme, which is not the same as
+     LinkedIn's own dark mode setting. */
   background: #fff;
   padding: 0 0 2px;
 
@@ -39,7 +40,7 @@
   margin: 0;
   font-size: 15px;
   line-height: 1.5;
-  color: #16181c;
+  color: inherit;
 }
 
 /* Its own row, right-aligned. Absolutely positioning it in the corner let the
@@ -59,7 +60,7 @@
   font: inherit;
   font-size: 11px;
   line-height: 15px;
-  color: #8a93a0;
+  color: var(--ll-muted, #8a93a0);
   background: none;
   border: 0;
   padding: 0;
@@ -74,13 +75,6 @@
 
 /* Sensitive posts look identical to any other card. A distinct style would be
    a label by another name. */
-#linkedless-overlay .ll-rail { }
-
-@media (prefers-color-scheme: dark) {
-  #linkedless-overlay .ll-card { background: #1b1f23; }
-  #linkedless-overlay .ll-text { color: #e8eaed; }
-  #linkedless-overlay .ll-reveal { color: #949ba4; }
-}
 
 /* ── Feed furniture ──────────────────────────────────────────────────────
    The sidebars are not the feed. Hiding them is the same idea as the cards:

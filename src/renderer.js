@@ -4,7 +4,7 @@
  * Two things happen every frame.
  *
  * 1. A card is drawn over each translated post. Cards live in one fixed
- *    container attached to document.body, outside React's tree, because
+ *    container attached to the scroll container, outside React's tree, because
  *    anything injected into a post is stripped on the next reconciliation.
  *
  * 2. The post underneath is collapsed to the card's height, using a
@@ -27,17 +27,40 @@
   var MIN_CARD_HEIGHT = 56;
   var CARD_OVERHANG = 4;
 
+  // The element LinkedIn actually scrolls, which is not the window.
+  var SCROLLER_SELECTOR = "main";
+
   var overlay = null;
   var styleEl = null;
   var nodes = new Map();      // hash -> card element
   var heights = new Map();    // hash -> { width, height }, so we measure once
   var lastCss = "";
 
+  /**
+   * @returns {Element} the scroll container, or document.body as a fallback
+   */
+  function scrollerEl() {
+    return document.querySelector(SCROLLER_SELECTOR) || document.body;
+  }
+
+  /**
+   * Mount the overlay inside the scroll container.
+   *
+   * It used to be a fixed layer on document.body that JavaScript repositioned
+   * on every scroll event, which always trails the browser by a frame. That is
+   * what users saw as cards drifting and reading like closed captions pasted
+   * over the feed. Inside the scroller the browser moves them natively, and
+   * the container's own overflow clips them under the header, which retires
+   * the clip-path that used to do that job.
+   *
+   * @returns {Element}
+   */
   function ensureOverlay() {
-    if (overlay && document.body.contains(overlay)) return overlay;
+    var host = scrollerEl();
+    if (overlay && host.contains(overlay)) return overlay;
     overlay = document.createElement("div");
     overlay.id = OVERLAY_ID;
-    document.body.appendChild(overlay);
+    host.appendChild(overlay);
     return overlay;
   }
 
@@ -47,6 +70,45 @@
     styleEl.id = STYLE_ID;
     document.head.appendChild(styleEl);
     return styleEl;
+  }
+
+  /**
+   * Find the colour actually painted behind an element by walking up until
+   * something is not transparent.
+   *
+   * The card needs to match the post it covers. Using
+   * `prefers-color-scheme` got this wrong for anyone running LinkedIn's dark
+   * mode on a light OS, or the reverse: a white card landed on a dark post and
+   * looked pasted on top of it.
+   *
+   * @param {Element} el
+   * @returns {{background: string, text: string}}
+   */
+  function surfaceOf(el) {
+    var node = el;
+    var background = "";
+    for (var depth = 0; depth < 8 && node && node !== document.documentElement; depth++) {
+      var colour = getComputedStyle(node).backgroundColor;
+      if (colour && colour !== "transparent" && !/rgba\([^)]*,\s*0\s*\)/.test(colour)) {
+        background = colour;
+        break;
+      }
+      node = node.parentElement;
+    }
+    if (!background) background = "#fff";
+
+    // Pick readable text from the surface rather than from a media query.
+    var rgb = background.match(/\d+/g);
+    var light = true;
+    if (rgb && rgb.length >= 3) {
+      var luminance = (0.299 * +rgb[0] + 0.587 * +rgb[1] + 0.114 * +rgb[2]) / 255;
+      light = luminance > 0.5;
+    }
+    return {
+      background: background,
+      text: light ? "#16181c" : "#e8eaed",
+      muted: light ? "#8a93a0" : "#949ba4",
+    };
   }
 
   /**
@@ -190,18 +252,31 @@
       lastCss = css;
     }
 
-    // Positioning is the only thing that runs on a plain scroll frame.
-    // transform keeps it off the layout path.
+    // Position in the scroller's own coordinate space, so scrolling itself
+    // needs no JavaScript.
+    var host = scrollerEl();
+    var hostRect = host.getBoundingClientRect();
+    var scrollTop = host === document.body ? 0 : host.scrollTop;
+    var scrollLeft = host === document.body ? 0 : host.scrollLeft;
+
     for (var p = 0; p < visible.length; p++) {
       var it = visible[p];
       var r = it.target.getBoundingClientRect();
+      // Re-read on every pass: LinkedIn's dark mode can be toggled without a
+      // reload, and the card has to follow it.
+      var surface = surfaceOf(it.target);
+      it.el.style.background = surface.background;
+      it.el.style.color = surface.text;
+      it.el.style.setProperty("--ll-muted", surface.muted);
+
       it.el.style.width = Math.round(r.width) + "px";
       // Overhang the collapsed text box by a few pixels. Matching its height
       // exactly left the top of the next line peeking out along the bottom
       // edge, which read as a row of dashes. The overhang lands on the post's
       // own background, so it is invisible.
       it.el.style.minHeight = (it.height + CARD_OVERHANG) + "px";
-      it.el.style.transform = "translate(" + Math.round(r.left) + "px," + Math.round(r.top) + "px)";
+      it.el.style.top = Math.round(r.top - hostRect.top + scrollTop) + "px";
+      it.el.style.left = Math.round(r.left - hostRect.left + scrollLeft) + "px";
     }
 
     nodes.forEach(function (el, hash) {
@@ -223,7 +298,7 @@
     overlay = null;
   }
 
-  ns.renderer = { render: render, teardown: teardown, buildCard: buildCard, textElement: textElement };
+  ns.renderer = { render: render, teardown: teardown, buildCard: buildCard, textElement: textElement, surfaceOf: surfaceOf };
 
   if (typeof module !== "undefined" && module.exports) {
     module.exports = ns.renderer;
