@@ -1,8 +1,16 @@
 {
   "manifest_version": 3,
-  "name": "LinkedLess",
+  "name": "LinkedLess - Shorter posts for LinkedIn™",
   "version": "0.1.0",
-  "description": "Rewrites every LinkedIn post as one plain sentence: what happened, and what the poster wants. Works in English and Spanish.",
+  "description": "Rewrites every LinkedIn post as one plain sentence of at most 280 characters. Runs entirely on your device. English and Spanish.",
+  "homepage_url": "https://github.com/agustinlinenberg/linkedless",
+  "minimum_chrome_version": "114",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "permissions": [
     "storage"
   ],
@@ -46,11 +54,5 @@
       ],
       "run_at": "document_idle"
     }
-  ],
-  "icons": {
-    "16": "icons/icon16.png",
-    "32": "icons/icon32.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  }
+  ]
 }

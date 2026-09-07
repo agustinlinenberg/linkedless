@@ -8,7 +8,8 @@
   "scripts": {
     "test": "node --test tests/*.test.js",
     "coverage": "node corpus/coverage.js",
-    "coverage:verbose": "node corpus/coverage.js --verbose"
+    "coverage:verbose": "node corpus/coverage.js --verbose",
+    "package": "node scripts/package.js"
   },
   "engines": {
     "node": ">=20"
