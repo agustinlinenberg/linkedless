@@ -96,13 +96,12 @@
     var textBox = post.querySelector(TEXT_SELECTOR);
     var body = textBox ? (textBox.innerText || "").trim() : "";
 
-    // When the text box is missing — a markup change, or a post type that
-    // doesn't use it — fall back to the header-stripped innerText with the
-    // footer cut off. Skipping instead, as an earlier version did, meant any
-    // post LinkedIn rendered differently silently got no card at all.
-    if (!body) {
-      body = ns.stripFooter(ns.extractBody(header));
-    }
+    // No text box means this is not a post. The feed also carries "people you
+    // may know" carousels, ads and prompts, and those clear the height and
+    // button-count checks easily. One of them got a card in the wild, which is
+    // what an earlier innerText fallback here bought us. Every real post
+    // carries this element, so requiring it is both the simplest test and the
+    // strictest one.
     if (!body || body.length < 20) return null;
 
     return {

@@ -42,20 +42,27 @@
   color: #16181c;
 }
 
-/* Only visible on hover: on a clean feed a row of blue links is its own kind
-   of noise, and the button is a fallback rather than a primary action. */
+/* Its own row, right-aligned. Absolutely positioning it in the corner let the
+   card text run underneath it, which is what users saw as a link colliding
+   with the copy. */
+#linkedless-overlay .ll-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2px;
+  min-height: 15px;
+}
+
+/* Always in the layout, only the opacity changes, so the card does not resize
+   under the cursor. On a feed you just cleaned up, a permanent row of blue
+   links is its own kind of noise. */
 #linkedless-overlay .ll-reveal {
-  position: absolute;
-  right: 0;
-  top: 0;
-  /* Inside the card, not below it: hanging it under the card put it on top of
-     whatever the post has next, usually an image. */
-  padding: 0 0 3px 10px;
-  background: inherit;
   font: inherit;
   font-size: 11px;
+  line-height: 15px;
   color: #8a93a0;
+  background: none;
   border: 0;
+  padding: 0;
   cursor: pointer;
   white-space: nowrap;
   opacity: 0;

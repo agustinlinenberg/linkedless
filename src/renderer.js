@@ -25,6 +25,7 @@
   var STYLE_ID = "linkedless-collapse";
   var CULL_MARGIN = 200;      // px beyond the viewport before we stop drawing
   var MIN_CARD_HEIGHT = 56;
+  var CARD_OVERHANG = 4;
 
   var overlay = null;
   var styleEl = null;
@@ -70,17 +71,23 @@
     text.textContent = card.text;
     el.appendChild(text);
 
+    // The button sits in its own row rather than floating over the text. It is
+    // always in the layout, only its opacity changes on hover, so the card
+    // does not resize under the cursor.
+    var foot = document.createElement("div");
+    foot.className = "ll-foot";
+
     var reveal = document.createElement("button");
     reveal.type = "button";
     reveal.className = "ll-reveal";
     reveal.textContent = card.lang === "es" ? "Ver original" : "Show original";
-    reveal.setAttribute("aria-label", reveal.textContent);
     reveal.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
       onDismiss(hash);
     });
-    el.appendChild(reveal);
+    foot.appendChild(reveal);
+    el.appendChild(foot);
 
     return el;
   }
@@ -164,7 +171,7 @@
       var cached = heights.get(item.hash);
       if (!cached || cached.width !== width) {
         item.el.style.width = width + "px";
-        cached = { width: width, height: Math.max(MIN_CARD_HEIGHT, item.el.offsetHeight) };
+        cached = { width: width, height: Math.max(MIN_CARD_HEIGHT, Math.ceil(item.el.getBoundingClientRect().height)) };
         heights.set(item.hash, cached);
       }
       item.height = cached.height;
@@ -189,7 +196,11 @@
       var it = visible[p];
       var r = it.target.getBoundingClientRect();
       it.el.style.width = Math.round(r.width) + "px";
-      it.el.style.minHeight = it.height + "px";
+      // Overhang the collapsed text box by a few pixels. Matching its height
+      // exactly left the top of the next line peeking out along the bottom
+      // edge, which read as a row of dashes. The overhang lands on the post's
+      // own background, so it is invisible.
+      it.el.style.minHeight = (it.height + CARD_OVERHANG) + "px";
       it.el.style.transform = "translate(" + Math.round(r.left) + "px," + Math.round(r.top) + "px)";
     }
 

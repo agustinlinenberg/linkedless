@@ -159,44 +159,6 @@
     return lines.slice(j).join("\n").trim();
   }
 
-  // Everything LinkedIn stacks under a post: the reaction rail, the counts,
-  // the action-bar labels, the translation link, the comment thread.
-  var FOOTER_RE = new RegExp(
-    "^(?:" +
-    "like|comment|repost|send|follow|following|" +
-    "recomendar|comentar|compartir|enviar|seguir|" +
-    "show translation|ver traducci[oó]n|see translation|" +
-    "activate to view larger image|" +
-    "\\d[\\d.,]*\\s*(?:comments?|reposts?|reactions?|likes?|comentarios?|reacciones?|veces compartido)|" +
-    "see (?:more|\\d+ more) comments?|ver (?:m[aá]s|\\d+ m[aá]s) comentarios?|" +
-    "load more comments|cargar m[aá]s comentarios|" +
-    "and \\d+ others?|y \\d+ (?:personas|m[aá]s)|" +
-    "[•·]|\\d+" +
-    ")\\s*$",
-    "i"
-  );
-
-  /**
-   * Cut a post's text at the first line that belongs to LinkedIn's footer.
-   *
-   * Only used when the post body cannot be read directly. post.innerText
-   * carries the job card, the reaction list, the counts and, on a popular
-   * post, the whole comment thread, and compressing that produced cards like
-   * "Greater Buenos Aires (Hybrid). Gabriel and 15 others reacted."
-   *
-   * @param {string} text
-   * @returns {string}
-   */
-  function stripFooter(text) {
-    var lines = String(text || "").split("\n");
-    for (var i = 0; i < lines.length; i++) {
-      if (FOOTER_RE.test(normalizeText(lines[i]))) {
-        return lines.slice(0, i).join("\n").trim();
-      }
-    }
-    return String(text || "").trim();
-  }
-
   /**
    * First sentence carrying actual content — skips one-word hooks and
    * ALL-CAPS shouting so templates get something readable.
@@ -258,7 +220,6 @@
   ns.extractAuthor = extractAuthor;
   ns.extractHeadline = extractHeadline;
   ns.extractBody = extractBody;
-  ns.stripFooter = stripFooter;
   ns.firstMeaningfulSentence = firstMeaningfulSentence;
   ns.truncate = truncate;
   ns.isWhitelistedAuthor = isWhitelistedAuthor;
@@ -271,7 +232,6 @@
       extractAuthor: extractAuthor,
       extractHeadline: extractHeadline,
       extractBody: extractBody,
-      stripFooter: stripFooter,
       firstMeaningfulSentence: firstMeaningfulSentence,
       truncate: truncate,
       isWhitelistedAuthor: isWhitelistedAuthor,
