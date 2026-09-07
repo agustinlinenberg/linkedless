@@ -6,8 +6,11 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "test": "node --test tests/",
+    "test": "node --test tests/*.test.js",
     "coverage": "node corpus/coverage.js",
     "coverage:verbose": "node corpus/coverage.js --verbose"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
