@@ -1,6 +1,12 @@
-<h1 align="center">LinkedLess</h1>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/wordmark-dark.png">
+    <img src="assets/wordmark.png" alt="LinkedLess" width="420">
+  </picture>
+</p>
 
-<p align="center"><i>LinkedIn, in plain English and Spanish.</i></p>
+<p align="center"><b>LinkedIn minus the bullshit.</b><br>
+<sub>English and Spanish. Runs entirely on your machine.</sub></p>
 
 LinkedIn has a dialect. You know the one: the parable about helping a stranger who turns out to be the CEO, the humblebrag wearing a lesson, the "unpopular opinion" that everyone already holds, the business takeaway bolted onto someone's death.
 
