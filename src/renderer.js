@@ -37,6 +37,18 @@
   var lastCss = "";
 
   /**
+   * @returns {boolean} true while a LinkedIn dialog is on screen
+   */
+  function dialogOpen() {
+    var dialogs = document.querySelectorAll("[role='dialog'], [aria-modal='true']");
+    for (var i = 0; i < dialogs.length; i++) {
+      var rect = dialogs[i].getBoundingClientRect();
+      if (rect.width > 120 && rect.height > 120) return true;
+    }
+    return false;
+  }
+
+  /**
    * @returns {Element} the scroll container, or document.body as a fallback
    */
   function scrollerEl() {
@@ -189,7 +201,15 @@
    * @param {string} feedSelector
    */
   function render(cards, hashText, postSelector, onDismiss, resolvePost, feedSelector, readPost) {
+    // A card drawn over the post composer is unusable and looks broken, and
+    // the same goes for any other LinkedIn dialog. Step aside while one is up.
+    if (dialogOpen()) {
+      if (overlay) overlay.style.display = "none";
+      return;
+    }
+
     var root = ensureOverlay();
+    root.style.display = "";
     var wrappers = document.querySelectorAll(postSelector);
     var feed = feedSelector ? document.querySelector(feedSelector) : null;
     var feedChildren = feed ? Array.prototype.slice.call(feed.children) : [];
@@ -298,7 +318,14 @@
     overlay = null;
   }
 
-  ns.renderer = { render: render, teardown: teardown, buildCard: buildCard, textElement: textElement, surfaceOf: surfaceOf };
+  ns.renderer = {
+    render: render,
+    teardown: teardown,
+    buildCard: buildCard,
+    textElement: textElement,
+    surfaceOf: surfaceOf,
+    dialogOpen: dialogOpen,
+  };
 
   if (typeof module !== "undefined" && module.exports) {
     module.exports = ns.renderer;

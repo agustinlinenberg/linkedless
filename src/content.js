@@ -35,12 +35,24 @@
   var FOCUS_CLASS = "ll-focus";
 
   /**
+   * Only the main feed. Hiding the rails and widening the column is scoped to
+   * the one page whose layout we have actually looked at: on Jobs the same
+   * rules pushed the whole page to the right, because that page's sidebar is
+   * wider and load-bearing.
+   *
+   * @returns {boolean}
+   */
+  function isFeedPage() {
+    return /^\/feed\/?$/.test(location.pathname);
+  }
+
+  /**
    * Toggle the class that hides LinkedIn's sidebars. A class on <body> rather
    * than inline styles, so the rules live in content.css and React never sees
    * an attribute it wants to reconcile away.
    */
   function applyFocus() {
-    var on = config.enabled && config.hideFurniture;
+    var on = config.enabled && config.hideFurniture && isFeedPage();
     document.body.classList.toggle(FOCUS_CLASS, on);
     if (on) {
       // Runs after the class lands so the rails are already out of the
@@ -213,6 +225,7 @@
       lastPath = location.pathname;
       ns.scanner.reset();
       ns.renderer.teardown();
+      applyFocus();
       RETRY_SCAN_DELAYS_MS.forEach(function (ms) { setTimeout(scan, ms); });
     }
 
