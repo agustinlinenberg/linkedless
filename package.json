@@ -1,0 +1,13 @@
+{
+  "name": "linkedless",
+  "version": "0.1.0",
+  "description": "Chrome extension that translates LinkedIn's dialect into plain English. No model, no API key, no network.",
+  "license": "MIT",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test tests/",
+    "coverage": "node corpus/coverage.js",
+    "coverage:verbose": "node corpus/coverage.js --verbose"
+  }
+}

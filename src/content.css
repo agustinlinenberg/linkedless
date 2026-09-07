@@ -1,0 +1,108 @@
+/* LinkedLess — overlay styling.
+   Everything is scoped under #linkedless-overlay so nothing leaks into
+   LinkedIn's own styles. The container is pointer-events:none, so the page
+   stays interactive everywhere a card is not drawn. */
+
+#linkedless-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  pointer-events: none;
+  /* Clip the whole overlay below LinkedIn's sticky header. The header has no
+     z-index of its own, so a card scrolling past it would otherwise sit on
+     top of the navigation. Clipping handles the partly-overlapping case that
+     culling by rect cannot. */
+  clip-path: inset(var(--ll-nav-height, 52px) 0 0 0);
+}
+
+#linkedless-overlay .ll-card {
+  position: fixed;
+  /* Positioned with transform, so the anchor stays at the origin. Moving a
+     card on scroll then costs a composite instead of a layout. */
+  left: 0;
+  top: 0;
+  will-change: transform;
+  pointer-events: auto;
+  box-sizing: border-box;
+
+  /* Deliberately frameless. The card sits inside LinkedIn's own post card, so
+     a border and a radius of its own read as a box inside a box. It needs an
+     opaque background only because the original text is still behind it,
+     collapsed rather than removed. */
+  background: #fff;
+  padding: 0 0 2px;
+
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+
+#linkedless-overlay .ll-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #16181c;
+}
+
+/* Only visible on hover: on a clean feed a row of blue links is its own kind
+   of noise, and the button is a fallback rather than a primary action. */
+#linkedless-overlay .ll-reveal {
+  position: absolute;
+  right: 0;
+  top: 0;
+  /* Inside the card, not below it: hanging it under the card put it on top of
+     whatever the post has next, usually an image. */
+  padding: 0 0 3px 10px;
+  background: inherit;
+  font: inherit;
+  font-size: 11px;
+  color: #8a93a0;
+  border: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+#linkedless-overlay .ll-card:hover .ll-reveal,
+#linkedless-overlay .ll-reveal:focus-visible { opacity: 1; }
+#linkedless-overlay .ll-reveal:hover { color: #0a66c2; text-decoration: underline; }
+
+/* Sensitive posts look identical to any other card. A distinct style would be
+   a label by another name. */
+#linkedless-overlay .ll-rail { }
+
+@media (prefers-color-scheme: dark) {
+  #linkedless-overlay .ll-card { background: #1b1f23; }
+  #linkedless-overlay .ll-text { color: #e8eaed; }
+  #linkedless-overlay .ll-reveal { color: #949ba4; }
+}
+
+/* ── Feed furniture ──────────────────────────────────────────────────────
+   The sidebars are not the feed. Hiding them is the same idea as the cards:
+   remove what you did not come here to read. Media inside posts is never
+   touched, since that is content. */
+
+body.ll-focus aside {
+  display: none !important;
+}
+
+body.ll-focus #msg-overlay,
+body.ll-focus [class*="msg-overlay"] {
+  display: none !important;
+}
+
+/* ── Column width ────────────────────────────────────────────────────────
+   Not attempted. Two tries made it worse, the second badly: `min-width: 0`
+   on the wrappers removed the automatic minimum size of the grid and flex
+   items, so instead of widening they collapsed.
+
+   What is known so far:
+     - `main` is display:grid, and its track widths come from the panes.
+     - Several wrappers between main and the feed are `display: contents`,
+       where width and max-width have no effect at all.
+     - Overriding main's grid alone collapsed the feed to 308px.
+     - Hiding the rails without touching the layout is stable, and leaves the
+       feed at LinkedIn's own ~555px with whitespace either side.
+
+   Next step is data, not another guess: .context/width-diagnostic.js walks up
+   from the feed container and reports each ancestor's width, display,
+   max-width and grid columns. Fix the element that is actually constraining
+   it, and nothing else. */

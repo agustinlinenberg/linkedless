@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>LinkedLess</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <h1>LinkedLess</h1>
+    <label class="toggle">
+      <input type="checkbox" id="enabled" checked>
+      <span>On</span>
+    </label>
+  </header>
+
+  <dl class="stats">
+    <div><dt>Posts read</dt><dd id="scanned">0</dd></div>
+    <div><dt>Translated</dt><dd id="translated">0</dd></div>
+    <div><dt>Left alone</dt><dd id="passthrough">0</dd></div>
+  </dl>
+
+  <p class="coverage">Coverage this session: <strong id="coverage">—</strong></p>
+
+  <footer>
+    <a href="#" id="options">Settings</a>
+    <span class="local">Runs on your device. No network calls.</span>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

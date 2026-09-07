@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # No dependencies to install. The extension ships no build step and the
+      # tests use node:test, so this is the whole toolchain.
+      - name: Unit tests
+        run: npm test
+
+      # Exits non-zero if sensitive-rail recall drops below 100% in any
+      # language. This is the check that must never be made optional: the
+      # failure it guards against is a snarky card on someone's obituary.
+      - name: Corpus report
+        run: npm run coverage

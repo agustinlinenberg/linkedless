@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>LinkedLess settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main>
+    <h1>LinkedLess</h1>
+    <p class="lede">
+      Rewrites every LinkedIn post as one plain sentence saying what happened
+      and what the poster wants. Works in English and Spanish. Everything runs
+      on your device, with no model, no API key and no network calls.
+    </p>
+
+    <section>
+      <h2>What to translate</h2>
+      <p class="hint">Uncheck a family to leave those posts exactly as LinkedIn rendered them.</p>
+      <div id="families"></div>
+    </section>
+
+    <section>
+      <h2>Never touch these people</h2>
+      <p class="hint">One name per line. Matched case-insensitively against the post author.</p>
+      <textarea id="whitelist" rows="5" placeholder="Ada Lovelace&#10;Grace Hopper"></textarea>
+    </section>
+
+    <section>
+      <h2>Focus mode</h2>
+      <label><input type="checkbox" id="hideFurniture"> Hide LinkedIn's sidebars</label>
+      <p class="hint">Media inside posts is always left alone.</p>
+      <label>Feed width
+        <select id="feedWidth">
+          <option value="620">Narrow (620px)</option>
+          <option value="740">Comfortable (740px)</option>
+          <option value="860">Wide (860px)</option>
+          <option value="1040">Very wide (1040px)</option>
+        </select>
+      </label>
+      <p class="hint">Measured at runtime. If the column cannot be widened
+        safely the extension leaves the layout untouched and says so in the
+        console.</p>
+    </section>
+
+    <section>
+      <h2>Debug</h2>
+      <label><input type="checkbox" id="debug"> Log scan activity to the console</label>
+    </section>
+
+    <p class="saved" id="saved" hidden>Saved.</p>
+
+    <section class="disclaimer">
+      <h2>What the labels mean</h2>
+      <p>
+        LinkedLess classifies posts by pattern and shows you which pattern
+        matched. It quotes the post's own words back to you and never writes a
+        claim about a person or guesses at anyone's motives.
+      </p>
+      <p>
+        A label describes a kind of post, not the person who wrote it, and it
+        will be wrong sometimes. Read the original before you conclude
+        anything.
+      </p>
+      <p>
+        Posts about death, illness, job loss and disaster go down a separate
+        path that states the facts and stops. If one of those ever gets a
+        snarky label, that is a bug. Please report it.
+      </p>
+    </section>
+  </main>
+  <script src="options.js"></script>
+</body>
+</html>

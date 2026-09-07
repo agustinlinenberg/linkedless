@@ -1,0 +1,56 @@
+{
+  "manifest_version": 3,
+  "name": "LinkedLess",
+  "version": "0.1.0",
+  "description": "Rewrites every LinkedIn post as one plain sentence: what happened, and what the poster wants. Works in English and Spanish.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://www.linkedin.com/*",
+    "https://linkedin.com/*"
+  ],
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_title": "LinkedLess",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
+  },
+  "options_page": "src/options/options.html",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.linkedin.com/*",
+        "https://linkedin.com/*"
+      ],
+      "js": [
+        "src/shared/utils.js",
+        "src/shared/lang.js",
+        "src/catalog/signal-words.js",
+        "src/catalog/genres.js",
+        "src/catalog/genres.es.js",
+        "src/engine/structure.js",
+        "src/engine/entities.js",
+        "src/engine/match.js",
+        "src/engine/compress.js",
+        "src/engine/render-text.js",
+        "src/layout.js",
+        "src/scanner.js",
+        "src/renderer.js",
+        "src/content.js"
+      ],
+      "css": [
+        "src/content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
