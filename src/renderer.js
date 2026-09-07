@@ -123,6 +123,43 @@
     };
   }
 
+  var LINK_RE = /(?:https?:\/\/|www\.|lnkd\.in\/)[^\s<>"')]+/gi;
+
+  /**
+   * Write text into a node, turning any URLs in it into working links.
+   *
+   * The card is the only thing visible once a post is collapsed, so a
+   * registration or job link rendered as dead text is a link the reader has
+   * lost. Built with createElement and textContent rather than innerHTML, so
+   * post content is never parsed as markup.
+   *
+   * @param {HTMLElement} node
+   * @param {string} value
+   */
+  function appendLinked(node, value) {
+    var text = String(value || "");
+    var cursor = 0;
+    var match;
+    LINK_RE.lastIndex = 0;
+
+    while ((match = LINK_RE.exec(text)) !== null) {
+      if (match.index > cursor) {
+        node.appendChild(document.createTextNode(text.slice(cursor, match.index)));
+      }
+      var raw = match[0].replace(/[.,;:)]+$/, "");
+      var anchor = document.createElement("a");
+      anchor.className = "ll-link";
+      anchor.href = /^https?:\/\//i.test(raw) ? raw : "https://" + raw;
+      anchor.target = "_blank";
+      anchor.rel = "noopener noreferrer nofollow";
+      anchor.textContent = raw;
+      anchor.addEventListener("click", function (e) { e.stopPropagation(); });
+      node.appendChild(anchor);
+      cursor = match.index + raw.length;
+    }
+    if (cursor < text.length) node.appendChild(document.createTextNode(text.slice(cursor)));
+  }
+
   /**
    * Build one card. Called once per post, not once per frame, so a click
    * cannot land on an element that is about to be replaced.
@@ -142,7 +179,7 @@
     // card look like a second post inside the post.
     var text = document.createElement("p");
     text.className = "ll-text";
-    text.textContent = card.text;
+    appendLinked(text, card.text);
     el.appendChild(text);
 
     // The button sits in its own row rather than floating over the text. It is
@@ -158,7 +195,7 @@
     reveal.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
-      onDismiss(hash);
+      onDismiss(card.stableKey, hash);
     });
     foot.appendChild(reveal);
     el.appendChild(foot);

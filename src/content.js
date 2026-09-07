@@ -115,8 +115,8 @@
     });
   }
 
-  function onDismiss(hash) {
-    ns.scanner.dismiss(hash);
+  function onDismiss(stableKey, hash) {
+    ns.scanner.dismiss(stableKey, hash);
     requestRender();
   }
 

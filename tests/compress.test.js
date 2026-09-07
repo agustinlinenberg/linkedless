@@ -91,3 +91,25 @@ test("the salutation prefix does not eat real content", () => {
   const body = "Yesterday the team shipped a caching layer that cut p99 latency from 840ms to 120ms across every region.";
   assert.equal(c.compress(body), body);
 });
+
+test("a link survives, even when it scores far below the rest of the post", () => {
+  // "Register here: <url>" is three words and loses badly to a sentence full
+  // of numbers, but it is the only place the link lives.
+  const out = c.compress(
+    "Our annual founders summit is on Oct 14 in Buenos Aires with 400 attendees.\n\n" +
+    "Register here: https://lnkd.in/abc123\n\nFollow me for more insights."
+  );
+  assert.ok(out.includes("https://lnkd.in/abc123"), out);
+  assert.ok(!out.includes("Follow me"), out);
+});
+
+test("sentence splitting does not shred a URL on its dots", () => {
+  const units = c.units("Apply here: https://acme.com/jobs/be-eng");
+  assert.equal(units.length, 1, JSON.stringify(units));
+  assert.ok(units[0].endsWith("https://acme.com/jobs/be-eng"), units[0]);
+});
+
+test("no full stop is appended after an address", () => {
+  const out = c.compress("We are hiring a Senior Backend Engineer at Acme. Apply here: https://acme.com/jobs");
+  assert.ok(out.endsWith("https://acme.com/jobs"), out);
+});

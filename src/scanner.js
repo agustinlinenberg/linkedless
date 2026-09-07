@@ -76,7 +76,7 @@
 
   var cards = new Map();        // hash -> render result
   var analyzed = new Set();     // hash -> already classified
-  var dismissed = new Set();    // hash -> user asked for the original
+  var dismissed = new Set();    // stableKey -> user asked for the original
   var dismissedEls = new WeakSet();
   var ANALYZED_MAX = 2000;
 
@@ -87,7 +87,7 @@
    * apart from LinkedIn's furniture.
    *
    * @param {Element} post
-   * @returns {{header: string, body: string, hashSource: string}|null}
+   * @returns {{header: string, body: string, hashSource: string, stableKey: string}|null}
    */
   function readPost(post) {
     var header = (post.innerText || "").trim();
@@ -111,6 +111,13 @@
       // innerText meant the hash changed every time a reaction or comment
       // count ticked, which re-analysed the post and rebuilt its card.
       hashSource: ns.extractAuthor(header) + "\u0000" + body,
+      // Survives the post being expanded. Clicking "…more" appends to the
+      // body, so a key made from the whole body changes and the post looks
+      // new again — which is why dismissing a card and then expanding the
+      // original brought the card straight back. A leading slice is identical
+      // before and after expansion.
+      stableKey: ns.extractAuthor(header) + "\u0000" +
+        body.replace(/(?:…|\.\.\.)?\s*(?:more|ver m[aá]s|see more)?\s*$/i, "").slice(0, 100),
     };
   }
 
@@ -185,7 +192,7 @@
       if (!parsed) continue;                                // React hasn't rendered yet
 
       var hash = hashText(parsed.hashSource);
-      if (dismissed.has(hash) || analyzed.has(hash)) continue;
+      if (dismissed.has(parsed.stableKey) || analyzed.has(hash)) continue;
 
       analyzed.add(hash);
       if (analyzed.size > ANALYZED_MAX) {
@@ -216,6 +223,7 @@
       }
 
       card.author = author;
+      card.stableKey = parsed.stableKey;
       cards.set(hash, card);
       stats.translated++;
     }
@@ -231,9 +239,13 @@
 
   /**
    * Reveal the original post: drop its card and remember not to re-render it.
+   *
+   * @param {string} stableKey identity that survives the post being expanded
+   * @param {string} hash current card key
+   * @param {Element} [element]
    */
-  function dismiss(hash, element) {
-    dismissed.add(hash);
+  function dismiss(stableKey, hash, element) {
+    dismissed.add(stableKey);
     cards.delete(hash);
     if (element) dismissedEls.add(element);
   }

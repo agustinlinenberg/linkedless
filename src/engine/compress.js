@@ -59,6 +59,11 @@
   // Engagement questions used to close a post.
   var ENGAGEMENT_Q_RE = /^(thoughts|agree|am i wrong|what would you do|what do you think|who else|right\?|qué opinás|que opinas|coincidís|coinciden|estoy equivocad)/i;
 
+  // A link is the one thing in a call to action the reader may actually want:
+  // the registration page, the job posting, the article. Sentences carrying
+  // one are kept even when they otherwise read as a pitch.
+  var URL_RE = /(?:https?:\/\/|www\.|lnkd\.in\/)[^\s<>"')]+/i;
+
   var HASHTAG_ONLY_RE = /^[#@\s\p{Extended_Pictographic}\p{Emoji_Presentation}·•→▪✅👉]+$/u;
   var ENTITY_RE = /[$€£]\s?\d|\b\d+([.,]\d+)?\s?%|\b\d{2,}\b|\b(19|20)\d{2}\b|\bseries?\s+[a-j]\b|\bserie\s+[a-j]\b/i;
   var ENTITY_RE_G = new RegExp(ENTITY_RE.source, "gi");
@@ -79,10 +84,34 @@
   var CONTINUATION_RE = /^(?:it'?s|it is|that'?s|that is|this is|they'?re|they are|which|whose|es|son|eso es|esto es|la que|el que|lo que hace)\s+(?=[\wÀ-ÿ])/i;
   var MERGED_MAX = 250;
 
+  var URL_RE_G = new RegExp(URL_RE.source, "gi");
+  var ENDS_WITH_URL_RE = new RegExp("(?:" + URL_RE.source + ")$", "i");
+  var URL_TOKEN = "\u0001";
+
+  /**
+   * Sentence splitting breaks on ".", which shreds a URL into fragments and
+   * loses it. Swap links for a dot-free token before splitting and put them
+   * back afterwards.
+   */
+  function maskLinks(line, store) {
+    URL_RE_G.lastIndex = 0;
+    return line.replace(URL_RE_G, function (url) {
+      store.push(url);
+      return URL_TOKEN + (store.length - 1) + URL_TOKEN;
+    });
+  }
+
+  function unmaskLinks(text, store) {
+    return text.replace(/\u0001(\d+)\u0001/g, function (_, i) {
+      return store[+i] !== undefined ? store[+i] : "";
+    });
+  }
+
   function units(body) {
     var out = [];
     String(body || "").split("\n").forEach(function (rawLine) {
-      var line = utils.normalizeText(rawLine);
+      var links = [];
+      var line = maskLinks(utils.normalizeText(rawLine), links);
       if (!line) return;
       // Always split into sentences, never only long lines. Broetry writes one
       // sentence per line so splitting is a no-op there, but a normal
@@ -90,9 +119,10 @@
       // long ones let "Qué orgullo enorme." ride along with the facts beside
       // it, immune to scoring.
       utils.splitSentences(line, { minLength: 2 }).forEach(function (sentence) {
-        var s = utils.normalizeText(sentence);
+        var s = unmaskLinks(utils.normalizeText(sentence), links);
         if (!s) return;
-        s = /[.!?]$/.test(s) ? s : s + ".";
+        // A full stop after an address reads as part of it.
+        if (!ENDS_WITH_URL_RE.test(s) && !/[.!?]$/.test(s)) s += ".";
 
         var previous = out.length ? out[out.length - 1] : null;
         if (previous && CONTINUATION_RE.test(s) && previous.length + s.length <= MERGED_MAX) {
@@ -145,7 +175,11 @@
       s += Math.round((index / (total - 1)) * 2);
     }
 
-    if (CTA_RE.test(unit)) s -= 5;
+    var hasLink = URL_RE.test(unit);
+    if (hasLink) s += 3;
+    // "Register here: <link>" is a call to action and also the only place the
+    // link lives. Dropping it took the useful part with the pitch.
+    if (CTA_RE.test(unit) && !hasLink) s -= 5;
     // Heavier than it looks: a sentence of pure feeling still scores well on
     // length and on any names it drops, so the penalty has to be enough to
     // push it under the keep threshold rather than merely rank it lower.
@@ -236,7 +270,13 @@
     var best = scored.reduce(function (max, u) { return Math.max(max, u.score); }, 0);
     var threshold = Math.max(1, best * 0.45);
 
-    var kept = scored.filter(function (u) { return u.score >= threshold; });
+    // A link clears the bar on its own. "Register here: <url>" is three words
+    // and scores far below a sentence full of numbers, but it is the only
+    // place the link lives, and losing it is the one cut the reader cannot
+    // undo without opening the original.
+    var kept = scored.filter(function (u) {
+      return u.score >= threshold || URL_RE.test(u.unit);
+    });
     // A post where nothing clears the bar is usually all feeling and no news.
     // Keep the single best line rather than the whole thing: there is nothing
     // to report, and saying so briefly beats repeating the post.
@@ -397,7 +437,7 @@
       var piece = list[i].replace(/\s+$/, "").replace(LEADING_CONNECTIVE_RE, "");
       if (!piece) continue;
       piece = piece.charAt(0).toUpperCase() + piece.slice(1);
-      if (!/[.!?…:;]$/.test(piece)) piece += ".";
+      if (!ENDS_WITH_URL_RE.test(piece) && !/[.!?…:;]$/.test(piece)) piece += ".";
       if (!out) { out = piece; continue; }
       if (out.length + 1 + piece.length > max) break;
       out += " " + piece;
@@ -405,7 +445,14 @@
     return utils.truncate(out, max);
   }
 
-  ns.compress = { compress: compress, analyze: analyze, units: units, score: score, debullshit: debullshit };
+  ns.compress = {
+    compress: compress,
+    analyze: analyze,
+    units: units,
+    score: score,
+    debullshit: debullshit,
+    URL_RE: URL_RE,
+  };
 
   if (typeof module !== "undefined" && module.exports) {
     module.exports = ns.compress;

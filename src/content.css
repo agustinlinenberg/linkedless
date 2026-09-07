@@ -46,6 +46,12 @@
 /* Its own row, right-aligned. Absolutely positioning it in the corner let the
    card text run underneath it, which is what users saw as a link colliding
    with the copy. */
+#linkedless-overlay .ll-link {
+  color: #0a66c2;
+  text-decoration: none;
+}
+#linkedless-overlay .ll-link:hover { text-decoration: underline; }
+
 #linkedless-overlay .ll-foot {
   display: flex;
   justify-content: flex-end;
